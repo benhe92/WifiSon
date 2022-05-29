@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  
+
+<button id="read">Connect with BLE device</button>
+<button id="start" disabled>Start</button>
+<button id="stop" disabled>Stop</button>
+<script src="https://unpkg.com/tone"></script>
+<script>
+
+  var deviceName = 'Palm'
+  var bleService = '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
+  var bleCharacteristic = 'beb5483e-36e1-4688-b7f5-ea07361b26a8'
+  var bluetoothDeviceDetected
+  var gattCharacteristic
+  var service = '4fafc201-1fb5-459e-8fcc-c5c9c331914b'
+  var val
+
+  const numbers = []
+  var tempo = 500
+  var pitch1 = 444
+  var pitch2 = 222
+  
+
+  document.querySelector('#read').addEventListener('click', function() {
+    if (isWebBluetoothEnabled()) { read() }
+  })
+
+  document.querySelector('#start').addEventListener('click', function(event) {
+    if (isWebBluetoothEnabled()) { start() }
+  })
+
+  document.querySelector('#stop').addEventListener('click', function(event) {
+    if (isWebBluetoothEnabled()) { stop() }
+  })
+
+  function isWebBluetoothEnabled() {
+    if (!navigator.bluetooth) {
+      console.log('Web Bluetooth API is not available in this browser!')
+      return false
+    }
+
+    return true
+  }
+
+  function getDeviceInfo() {
+    let options = {
+      filters:[
+        {services: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']}
+      ],
+      optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b']
+      
+    }
+
+    console.log('Requesting any Bluetooth Device...')
+    return navigator.bluetooth.requestDevice(options).then(device => {
+      bluetoothDeviceDetected = device
+    }).catch(error => {
+      console.log('Argh! ' + error)
+    })
+  }
+
+  function read() {
+    return (bluetoothDeviceDetected ? Promise.resolve() : getDeviceInfo())
+    .then(connectGATT)
+    .then(_ => {
+      console.log('Reading UV Index...')
+      return gattCharacteristic.readValue()
+    })
+    .catch(error => {
+      console.log('Waiting to start reading: ' + error)
+    })
+  }
+
+  function connectGATT() {
+    if (bluetoothDeviceDetected.gatt.connected && gattCharacteristic) {
+      return Promise.resolve()
+    }
+
+    return bluetoothDeviceDetected.gatt.connect()
+    .then(server => {
+      console.log('Getting GATT Service...')
+      return server.getPrimaryService(bleService)
+    })
+    .then(service => {
+      console.log('Getting GATT Characteristic...')
+      return service.getCharacteristic(bleCharacteristic)
+    })
+    .then(characteristic => {
+      gattCharacteristic = characteristic
+      gattCharacteristic.addEventListener('characteristicvaluechanged',
+          handleChangedValue)
+      document.querySelector('#start').disabled = false
+      document.querySelector('#stop').disabled = true
+    })
+  }
+
+  function handleChangedValue(event) {
+    let value = event.target.value.getUint8(0)
+    console.log("Value: "+ value)
+    console.log("Value type: "+typeof(value))
+    console.log("Numbers type: "+typeof(numbers))
+    numbers.push(value)
+    calculate(numbers)
+
+    
+  }
+
+  function start() {
+    gattCharacteristic.startNotifications()
+    .then(_ => {
+      console.log('Start reading...')
+      document.querySelector('#start').disabled = true
+      document.querySelector('#stop').disabled = false
+      //loop()
+      playSound()
+    })
+    .catch(error => {
+      console.log('[ERROR] Start: ' + error)
+    })
+  }
+
+  function stop() {
+    gattCharacteristic.stopNotifications()
+    .then(_ => {
+      console.log('Stop reading...')
+      document.querySelector('#start').disabled = false
+      document.querySelector('#stop').disabled = true
+    })
+    .catch(error => {
+      console.log('[ERROR] Stop: ' + error)
+    })
+  }
+
+  function calculate(array){
+    diff = array[array.length-1] - array[array.length-2]
+    console.log(diff)
+   tempo = Math.abs((200+diff))
+   console.log("tempo: "+tempo)
+   //tempo = 1000
+   Tone.Transport.bpm.value = tempo
+   if(flip() == true)
+   {
+     changeSound()
+   }
+    
+
+
+  }
+  function loop(){
+    playSound()
+    setInterval(loop, tempo)
+  }
+
+  function playSound(){
+// create two monophonic synths
+const synthA = new Tone.FMSynth().toDestination();
+const synthB = new Tone.AMSynth().toDestination();
+//play a note every quarter-note
+const loopA = new Tone.Loop(time => {
+	synthA.triggerAttackRelease(pitch2, "8n", time);
+}, "4n").start(0);
+//play another note every off quarter-note, by starting it "8n"
+const loopB = new Tone.Loop(time => {
+	synthB.triggerAttackRelease(pitch1, "8n", time);
+}, "4n").start("8n");
+// the loops start when the Transport is started
+Tone.Transport.start()
+// ramp up to 800 bpm over 10 seconds
+//Tone.Transport.bpm.rampTo(800, 10);
+  }
+  function changeSound()
+  {
+    pitch1 = pitch1*Math.floor(Math.random() * 11);
+    pitch2 = pitch1 / Math.floor(Math.random() * 11);
+
+    if(pitch1 > 2000 || pitch1 == 0){
+      pitch1 = 444
+    }
+    if(pitch2 > 2000 || pitch2 == 0){
+      pitch2 = 222
+    }
+    console.log("Pitch1: "+pitch1)
+    console.log("Pitch2: "+pitch2)
+  }
+
+  function flip() {
+let num = Math.random();
+console.log("flip: "+num)
+if (num > 0.95) {
+  return true
+  }
+}
+
+
+</script>
+</body>
+</html>
