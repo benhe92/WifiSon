@@ -13,7 +13,6 @@
 <button id="read">Connect with BLE device</button>
 <button id="start" disabled>Start</button>
 <button id="stop" disabled>Stop</button>
-<p id="value">VALUE</p>
 <!-- <script src="https://unpkg.com/tone"></script> -->
 <script>
 
@@ -30,7 +29,7 @@
   var pitch1 = 444
   var pitch2 = 222
   
-  
+
   document.querySelector('#read').addEventListener('click', function() {
     if (isWebBluetoothEnabled()) { read() }
   })
@@ -108,16 +107,12 @@
   function handleChangedValue(event) {
     let value = event.target.value.getUint8(0)
     console.log("Value: "+ value)
-    //console.log("Value type: "+typeof(value))
-    //console.log("Numbers type: "+typeof(numbers))
+    console.log("Value type: "+typeof(value))
+    console.log("Numbers type: "+typeof(numbers))
     numbers.push(value)
-    calculate(numbers)
+    //calculate(numbers)
 
     
-  }
-  function displayValue(dispVal)
-  {
-    document.querySelector("#value").innerHTML = dispVal;
   }
 
   function start() {
@@ -154,7 +149,6 @@
     console.log(diff)
    tempo = Math.abs((200+diff))
    console.log("tempo: "+tempo)
-   displayValue(tempo)
    //tempo = 1000
    //Tone.Transport.bpm.value = tempo
    if(flip() == true)
