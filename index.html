@@ -116,18 +116,20 @@
   }
 
   function start() {
-    gattCharacteristic.startNotifications()
-    .then(_ => {
-      console.log('Start reading...')
-      document.querySelector('#start').disabled = true
-      document.querySelector('#stop').disabled = false
-      //loop()
-      //playSound()
-      console.log("starting...")
-    })
-    .catch(error => {
-      console.log('[ERROR] Start: ' + error)
-    })
+    //gattCharacteristic.startNotifications()
+    console.log(gattCharacteristic.readValue())
+    
+    // .then(_ => {
+    //   console.log('Start reading...')
+    //   document.querySelector('#start').disabled = true
+    //   document.querySelector('#stop').disabled = false
+    //   //loop()
+    //   //playSound()
+    //   console.log("starting...")
+    // })
+    // .catch(error => {
+    //   console.log('[ERROR] Start: ' + error)
+    // })
   }
 
   function stop() {
