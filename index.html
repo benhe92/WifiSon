@@ -123,6 +123,7 @@
       document.querySelector('#stop').disabled = false
       //loop()
       //playSound()
+      console.log("starting...")
     })
     .catch(error => {
       console.log('[ERROR] Start: ' + error)
@@ -147,7 +148,7 @@
    tempo = Math.abs((200+diff))
    console.log("tempo: "+tempo)
    //tempo = 1000
-   Tone.Transport.bpm.value = tempo
+   //Tone.Transport.bpm.value = tempo
    if(flip() == true)
    {
      changeSound()
